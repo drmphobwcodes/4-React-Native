@@ -1,14 +1,18 @@
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Card, Icon } from 'react-native-elements';
 import { baseUrl } from '../../shared/baseUrl';
 import * as Animatable from 'react-native-animatable';
-import { Alert } from 'react-native';
-
+import { Alert, PanResponder } from 'react-native';
 
 const RenderCampsite = (props) => {
     const { campsite } = props;
-
     const view = useRef();
+
+    const isRightSwipe = (gestureState) => {
+        const { dx } = gestureState;
+        return dx > 200;
+    };
 
     const isLeftSwipe = ({ dx }) => dx < -200;
 
@@ -21,7 +25,7 @@ const RenderCampsite = (props) => {
                     console.log(endState.finished ? 'finished' : 'canceled')
                 );
         },
-        onPanResponderEnd: (e, gestureState) => {
+        onPanResponderEnd: (_, gestureState) => {
             console.log('pan responder end', gestureState);
             if (isLeftSwipe(gestureState)) {
                 Alert.alert(
@@ -33,20 +37,22 @@ const RenderCampsite = (props) => {
                         {
                             text: 'Cancel',
                             style: 'cancel',
-                            onPress: () => console.log('Cancel Pressed')
+                            onPress: () => console.log('Cancel Pressed'),
                         },
                         {
                             text: 'OK',
                             onPress: () =>
                                 props.isFavorite
                                     ? console.log('Already set as a favorite')
-                                    : props.markFavorite()
-                        }
+                                    : props.markFavorite(),
+                        },
                     ],
                     { cancelable: false }
                 );
+            } else if (isRightSwipe(gestureState)) {
+                props.onShowModal();
             }
-        }
+        },
     });
 
     if (campsite) {
@@ -59,7 +65,7 @@ const RenderCampsite = (props) => {
                 {...panResponder.panHandlers}
             >
                 <Card containerStyle={styles.cardContainer}>
-                    <Card.Image source={{ uri: baseUrl + campsite.image }}>
+                <Card.Image source={{ uri: baseUrl + campsite.image }}>
                         <View style={{ justifyContent: 'center', flex: 1 }}>
                             <Text style={styles.cardText}>{campsite.name}</Text>
                         </View>
@@ -114,7 +120,8 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: 'white',
         fontSize: 20
-    }
+    },
+    // Other styles
 });
 
 export default RenderCampsite;
